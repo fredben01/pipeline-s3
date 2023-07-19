@@ -1,0 +1,36 @@
+pipeline {
+    agent {
+        docker {
+            image 'mlungwsr/ubuntu-awscli'
+            args '-u 0'
+        }
+    }
+
+    parameters {
+      string(name: 'BUCKET', defaultValue: '', description: 'Nombre del bucket que se creará')
+      choice(name: 'CHOICE', choices: ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2'], description: 'Elige una región')
+    }
+
+    environment {
+      AWS_ACCESS_KEY_ID = 'AKIAVFTYX6H4L436GXXC'
+      AWS_SECRET_ACCESS_KEY = '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'
+      AWS_REGION = "${params.CHOICE}"
+      BUCKET_NAME = "${params.BUCKET}"
+    }
+
+    stages {
+        stage ('Connection') {
+            steps {
+                sh "aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID"
+                sh "aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+                sh "aws configure set region $AWS_REGION"
+            }
+        }
+        stage('Create Bucket S3'){
+            steps {
+                sh "aws s3api create-bucket --bucket $BUCKET_NAME --region $AWS_REGION"
+            }
+        }
+        
+    }
+}
